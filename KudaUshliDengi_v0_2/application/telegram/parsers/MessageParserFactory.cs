@@ -16,7 +16,7 @@ public class MessageParserFactory : IMessageParserFactory
     public Result<IMessageParser> GetParser(MessageType type)
     {
         if(!_parsers.ContainsKey(type))
-            return Result<IMessageParser>.NotFound(BaseError.New($"Нет обработчика для типа сообщения: {type}", 121));
+            return Result<IMessageParser>.NotFound(Error.New($"Нет обработчика для типа сообщения: {type}", 121));
         
         return Result<IMessageParser>.Success(_parsers[type]);
     }

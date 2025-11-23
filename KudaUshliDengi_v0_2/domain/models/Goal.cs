@@ -24,6 +24,7 @@ public class Goal : Entity<GoalId>
         UserId = userId;
         Name = name;
         TargetAmount = targetAmount ?? Money.Empty;
+        CurrentAmount = Money.Empty;
     }
 
     public void UpdateTargetAmount(Money targetAmount) => TargetAmount = targetAmount;
@@ -48,9 +49,16 @@ public class Goal : Entity<GoalId>
     {
         if (IsCompleted) return;
         
-        if (TargetAmount == CurrentAmount)
-            IsCompleted = true;
-        
+        //if (TargetAmount == CurrentAmount)
+        IsCompleted = true;
+        Delete();
         //AddDomainEvent(new GoalCompletedEvent(this));
+    }
+
+    public void Rename(string newName)
+    {
+        if (string.IsNullOrWhiteSpace(newName))
+            throw new ArgumentNullException();
+        Name = newName;
     }
 }

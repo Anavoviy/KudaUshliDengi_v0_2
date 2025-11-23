@@ -1,4 +1,4 @@
-namespace KudaUshliDengi_v0_2.mt;
+namespace KudaUshliDengi_v0_2.infrastructure.mt;
 
 public interface IMTLocker<T>
 {

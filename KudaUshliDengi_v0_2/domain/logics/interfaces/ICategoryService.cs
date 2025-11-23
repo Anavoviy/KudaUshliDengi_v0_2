@@ -42,5 +42,6 @@ public interface ICategoryService
     Task<Result> CreateBasicCategoriesForUser(UserId userId, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsIncomeCategory(UserId userId, string nameNew, CancellationToken cancellationToken = default);
-    Task<bool> ExistsExpenseCategory(UserId userId, string nameNew, CancellationToken cancellationToken = default);
+    Task<bool> ExistsCategory(UserId userId, string nameNew, CancellationToken cancellationToken = default);
+    Task<Result> RenameAsync(UserId userId, string oldCategoryName, string newCategoryName, CancellationToken cancellationToken = default);
 }

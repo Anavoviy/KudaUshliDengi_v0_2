@@ -16,7 +16,7 @@ public readonly struct Result<T> : IResult<T>
     private Result(ResultStatus status, T value = default)
     {
         Value = value;
-        Error = BaseError.Empty;
+        Error = result.Error.Empty;
         _status = status;
     }
     

@@ -1,3 +1,4 @@
+using KudaUshliDengi_v0_2.domain.events.user;
 using KudaUshliDengi_v0_2.domain.interfaces;
 using KudaUshliDengi_v0_2.domain.valueobjects.ids;
 
@@ -21,5 +22,7 @@ public class User : Entity<UserId>
         TgUserId = tgUserId;
         TgChatId = tgChatId;
         TgUsername = tgUsername ?? String.Empty;
+        
+        AddDomainEvent(new RegisterNewUser(this));
     }
 }

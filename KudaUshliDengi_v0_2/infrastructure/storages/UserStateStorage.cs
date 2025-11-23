@@ -12,7 +12,7 @@ public class UserStateStorage : IStateStorage<long, UserState>
     {
         if (_store.TryGetValue(userId, out var result))
             return Task.FromResult(Result<UserState>.Success(result));
-        return Task.FromResult(Result<UserState>.NotFound(BaseError.New("User не найден", 121)));
+        return Task.FromResult(Result<UserState>.NotFound(Error.New("User не найден", 121)));
     }
     public Task<Result> RemoveAsync(long userId, CancellationToken ct = default)
     {

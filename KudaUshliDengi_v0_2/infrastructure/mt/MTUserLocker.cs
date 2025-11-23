@@ -1,7 +1,8 @@
 using System.Collections.Concurrent;
 using KudaUshliDengi_v0_2.domain.models;
+using KudaUshliDengi_v0_2.mt;
 
-namespace KudaUshliDengi_v0_2.mt;
+namespace KudaUshliDengi_v0_2.infrastructure.mt;
 
 public class MTUserLocker : IMTLocker<User>, IAsyncDisposable
 {

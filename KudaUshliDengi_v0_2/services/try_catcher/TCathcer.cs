@@ -14,7 +14,7 @@ public abstract class TCatcher : ITCatcher
         }
         catch (Exception ex)
         {
-            return Result.Failure(BaseError.New(ex.Message, ex.HResult));
+            return Result.Failure(Error.New(ex.Message, ex.HResult));
         }
     }
 
@@ -27,7 +27,7 @@ public abstract class TCatcher : ITCatcher
         }
         catch (Exception ex)
         {
-            return Result.Failure(BaseError.New(ex.Message, ex.HResult));
+            return Result.Failure(Error.New(ex.Message, ex.HResult));
         }
     }
 
@@ -37,12 +37,12 @@ public abstract class TCatcher : ITCatcher
         {
             var res = await func();
             if (res is null)
-                return Result<TResult>.NotFound(BaseError.New("Не удалось найти. Вернулось значение Null", 121)); //TODO: Придумай ты уже коды ошибок
+                return Result<TResult>.NotFound(Error.New("Не удалось найти. Вернулось значение Null", 101)); //TODO: Придумай ты уже коды ошибок
             return Result<TResult>.Success(res!);
         }
         catch (Exception ex)
         {
-            return Result<TResult>.Failure(BaseError.New(ex.Message, ex.HResult));
+            return Result<TResult>.Failure(Error.New(ex.Message, ex.HResult));
         }
     }
 
@@ -52,12 +52,12 @@ public abstract class TCatcher : ITCatcher
         {
             var res = func();
             if (res is null)
-                return Result<TResult>.NotFound(BaseError.New("Не удалось найти. Вернулось значение Null", 121));  //TODO: Придумай ты уже коды ошибок
+                return Result<TResult>.NotFound(Error.New("Не удалось найти. Вернулось значение Null", 101));  //TODO: Придумай ты уже коды ошибок
             return Result<TResult>.Success(res!);
         }
         catch (Exception ex)
         {
-            return Result<TResult>.Failure(BaseError.New(ex.Message, ex.HResult));
+            return Result<TResult>.Failure(Error.New(ex.Message, ex.HResult));
         }
     }
 }

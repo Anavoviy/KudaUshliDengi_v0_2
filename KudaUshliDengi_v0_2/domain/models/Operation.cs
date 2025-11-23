@@ -56,7 +56,7 @@ public class Operation : Entity<OperationId>
     {
         decimal sum = Items.Sum(x => x.Amount);
         return sum != Amount
-            ? Result.Failure(BaseError.New($"Сумма чеков ({Amount}) != сумме составной операции ({sum})", 1)) //TODO: Ввести систему кодов
+            ? Result.Failure(Error.New($"Сумма чеков ({Amount}) != сумме составной операции ({sum})", 1)) //TODO: Ввести систему кодов
             : Result.Success();;
     }
 }

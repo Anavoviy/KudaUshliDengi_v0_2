@@ -1,3 +1,4 @@
+using KudaUshliDengi_v0_2.domain.events.category;
 using KudaUshliDengi_v0_2.domain.interfaces;
 using KudaUshliDengi_v0_2.domain.valueobjects.ids;
 
@@ -20,5 +21,12 @@ public class Category : Entity<CategoryId>
         UserId = userId;
         Name = name;
         ParentId = parentId;
+    }
+
+    public void Rename(string newCategoryName)
+    {
+        string oldCategoryName = Name;
+        this.Name = newCategoryName;
+        AddDomainEvent(new CategoryRenamed(this, oldCategoryName));
     }
 }

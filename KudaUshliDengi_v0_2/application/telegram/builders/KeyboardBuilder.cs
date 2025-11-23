@@ -16,10 +16,10 @@ public static class KeyboardBuilder
     public static ReplyKeyboardMarkup Categories
         => new ReplyKeyboardMarkup(resizeKeyboard: true)
             .AddButtons("Все категории", "Назад");
+
     public static ReplyKeyboardMarkup Goals
         => new ReplyKeyboardMarkup(resizeKeyboard: true)
-            .AddButtons("Все цели", "Прогресс").AddNewRow()
-            .AddButton("Назад");
+            .AddButtons("Все цели", "Назад");
     public static ReplyKeyboardMarkup Limits
         => new ReplyKeyboardMarkup(resizeKeyboard: true)
             .AddButtons("Бюджет").AddNewRow()

@@ -1,4 +1,7 @@
+using System.Runtime.InteropServices.JavaScript;
 using KudaUshliDengi_v0_2.domain.models;
+using KudaUshliDengi_v0_2.domain.valueobjects;
+using Microsoft.Extensions.Options;
 
 namespace KudaUshliDengi_v0_2.application.telegram.builders;
 
@@ -45,13 +48,11 @@ public static class MessageBuilder
            • `25000 из обучение` - снять с цели
          
            🗃️ *УПРАВЛЕНИЕ КАТЕГОРИЯМИ:*
-           ```
-           новый доход фриланс       - создать категорию дохода
-           новый кафе                - создать категорию расхода
-           новый кафе в развлечения  - подкатегория расхода
-           x кафе                    - удалить
-           кафе это кофейня          - переименовать
-           ```
+           • `новый доход фриланс` - создать категорию дохода
+           • `новый развлечения` - создать категорию расхода
+           • `новый кафе в развлечения` - подкатегория расхода
+           • `x кафе` - удалить
+           • `кафе это кофейня` - переименовать
            
            📈 *ОТЧЁТЫ И АНАЛИТИКА:*
            ```
@@ -86,21 +87,45 @@ public static class MessageBuilder
            🔗 *Все команды:* нажми на кнопку "Помощь"
            """;
 
+    public static string NotFoundGoals 
+        => """
+           У вас отсутствуют цели!
+           
+           Вы можете их добавить с помощью команды: 
+           ```text
+           копилка [название] цель [сумма]
+           ```
+           Как пример:
+           ```text
+           копилка айфон цель 120000
+           ```
+           """;
+
+    public static string CreateGoal(Goal goal)
+        => $"""
+            🎯 *Цель добавлена*
+            ├─ 📅 {goal.CreatedAt.ToString("dd.MM.yyyy")}
+            ├─ {(emojiMap.TryGetValue(goal.Name, out var emojiExpense) ? emojiExpense : Emojies.Random())}{goal.Name}
+            └─ 🤑 *{goal.TargetAmount}*
+            """;
+
     public static string ListCategories(List<Category> categories)
     {
         string message = "🎯 *ВСЕ ТВОИ КАТЕГОРИИ* \n\n 💸 *ДОХОДЫ* \n";
 
-        var incomes = categories.FirstOrDefault(c => c.Name == "доходы").Childrens.ToArray();
-        for (int i = 0; i < incomes.Length; i++)
+        var incomes = categories.FirstOrDefault(c => c.Name == "доходы")?.Childrens.ToArray();
+        if (incomes is not null)
         {
-            message += incomes[i].Name;
-            if (i < incomes.Length - 1)
-                message += ", ";
+            for (int i = 0; i < incomes.Length; i++)
+            {
+                message += $"`{(i != 0 ? incomes[i].Name : incomes[i].Name[0].ToString().ToUpper() + incomes[i].Name[1..])}`";
+                if (i < incomes.Length - 1)
+                    message += ", ";
+            }
+            categories.Remove(categories.FirstOrDefault(c => c.Name == "доходы")!);
         }
 
         message += "\n\n🧾 *РАСХОДЫ* \n";
-
-        categories.Remove(categories.FirstOrDefault(c => c.Name == "доходы"));
         
         foreach (var category in categories)
         {
@@ -115,8 +140,8 @@ public static class MessageBuilder
         return message;
     }
 
-    public static string NotFoundCategory(string categoryName, TransactionType type)
-        => $"У вас отсутствует категория {(type == TransactionType.Income ? "доходов" : "расходов")} `{categoryName}`!";
+    public static string NotFoundCategory(string categoryName, TransactionType? type = null)
+        => $"У вас отсутствует категория {(type is null ? "" : (type == TransactionType.Income ? "доходов" : "расходов"))} `{categoryName}`!";
 
     public static string CreateOperation(Operation operation, string name)
         => operation.Type == TransactionType.Expense 
@@ -142,10 +167,10 @@ public static class MessageBuilder
         return mes;
     }
 
-    public static string CategoryExists(string nameNew, bool income = false)
+    public static string CategoryExists(string nameNew, bool? income = false)
         => $"""
             Категория: `{nameNew}`
-            Уже есть в {(income ? "доходах 💚" : "расходах 💰")}
+            Уже есть {(income is null ? "среди ваших категорий!" : ("в " + ((bool)income ? "доходах 💚" : "расходах 💰")))}
             """;
 
     public static string Oops
@@ -168,6 +193,79 @@ public static class MessageBuilder
         => $"""
             Категория: `{nameCategory}`
             Успешно удалена!
+            """;
+
+    public static string ExistsManyParentCategories(string parentCategoryName, List<Category> searchCategories)
+    {
+        var mes = "Найдено несколько категорий подходящих по названию основной категории:\n";
+
+        for (int i = 0; i < searchCategories.Count; i++)
+            mes += $"{i + 1}. {searchCategories[i].Name}\n";
+        
+        mes += "\nПопробуйте ещё раз, введя более конкретно основную категорию";
+        
+        return mes;
+    }
+
+    public static string CategoryRenamed(string oldCategoryName, string newCategoryName)
+        => $"""
+            Категория: `{oldCategoryName}`
+            ├─ 🔃 успешно переименована
+            └─ 🔜 теперь -> `{newCategoryName}`
+            """;
+
+    public static string ListGoals(List<Goal>? goals)
+    {
+        string mes = "*ЦЕЛИ:*\n--- \n";
+
+        foreach (var goal in goals)
+        {
+            string remains = "много";
+            if (goal.CurrentAmount != 0)
+            {
+                int days = DateOnly.FromDateTime(DateTime.UtcNow).DayNumber -
+                           DateOnly.FromDateTime(goal.CreatedAt).DayNumber;
+                remains = Math.Round((goal.TargetAmount - goal.CurrentAmount) / (goal.CurrentAmount / days)).ToString();
+            }
+
+            mes += "*" + (emojiMap.TryGetValue(goal.Name.ToLower(), out var emoji) ? emoji : "") + goal.Name[0].ToString().ToUpper() + goal.Name[1..] + "*\n";
+            mes += $"├─ ";
+            mes += ProgressBar(goal.CurrentAmount / goal.TargetAmount);
+
+            mes += $"\n├─ 💰 {goal.CurrentAmount} / {goal.TargetAmount}";
+            mes += $"\n└─ 📆 ещё *~{remains} дней*\n\n";
+        }
+        
+        return mes;
+    }
+
+    private static string ProgressBar(decimal rate, int steps = 10)
+    {
+        if(rate < 0)
+            throw new ArgumentOutOfRangeException();
+        if (rate >= 1)
+            return $"{new string('■', steps)} {(int)(rate * 100)}%";
+        
+        decimal step = 100m / steps;
+        int countSteps = (int)(rate / step);
+
+        if (rate % step > 0.85m * step)
+            countSteps++;
+        
+        return $"{new string('■', countSteps)}{new string('▢', steps - countSteps)} *{(int)(rate * 100)}%*";
+    }
+
+    public static string CancelGoal(string name)
+        => $"""
+            Цель:  `{name}`
+            └─ ❎ закрыта
+            """;
+
+    public static string GoalRename(string name, string newName)
+        => $"""
+            Цель: `{name}`
+            ├─ 🔃 успешно переименована
+            └─ 🔜 теперь -> `{newName}`
             """;
 }
 

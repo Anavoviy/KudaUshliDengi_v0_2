@@ -1,5 +1,8 @@
 using KudaUshliDengi_v0_2.application.telegram.interfaces;
+using KudaUshliDengi_v0_2.application.telegram.logics;
 using KudaUshliDengi_v0_2.application.telegram.parsers;
+using KudaUshliDengi_v0_2.application.telegram.services;
+using KudaUshliDengi_v0_2.domain.logics.interfaces;
 using KudaUshliDengi_v0_2.telegram.background;
 using Microsoft.Extensions.DependencyInjection;
 using Telegram.Bot;
@@ -21,7 +24,7 @@ public static class TelegramServicesExtensions
 
         services.AddHostedService<TelegramBackgroundService>();
 
-        //services.AddScoped<Auth>(); //TODO: Добавить Auth
+        services.AddScoped<IAuthService, Auth>();
         
         
         // Добавление MessageParsers
@@ -33,5 +36,7 @@ public static class TelegramServicesExtensions
         );
         services.AddScoped<IMessageParserFactory, MessageParserFactory>();
         services.AddScoped<IMainMessageParser, MainMessageParser>();
+        
+        services.AddTgLogic();
     }
 }

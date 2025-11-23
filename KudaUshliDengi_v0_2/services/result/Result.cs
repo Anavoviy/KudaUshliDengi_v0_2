@@ -17,7 +17,7 @@ public readonly struct Result : IResult
     }
 
     public static Result Success()
-        => new Result(ResultStatus.Success, BaseError.Empty);
+        => new Result(ResultStatus.Success, result.Error.Empty);
 
     public static Result Failure(IError error)
         => new Result(ResultStatus.Failure, error);

@@ -5,7 +5,7 @@ namespace KudaUshliDengi_v0_2.infrastructure.events;
 
 public static class BackgroundEventServicesExtensions
 {
-    public static void UseInMemoryEventProcessing(this IServiceCollection services)
+    public static void AddInMemoryEventProcessing(this IServiceCollection services)
     {
         services.AddSingleton<IBackgroundEventQueue, BackgroundEventQueue>();
         services.AddHostedService<BackgroundEventProcessor>();

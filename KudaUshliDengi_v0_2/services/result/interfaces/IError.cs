@@ -6,4 +6,6 @@ public interface IError
     int Code { get; }
     
     bool IsEmpty { get; }
+
+    string? ToString();
 }
