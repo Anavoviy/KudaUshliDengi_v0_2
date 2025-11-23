@@ -10,5 +10,6 @@ public static class TgLogicsServicesExtensions
     {
         services.AddScoped<ICategoryLogic, CategoryLogic>();
         services.AddScoped<IGoalLogic, GoalLogic>();
+        services.AddScoped<IOperationLogic, OperationLogic>();
     }
 }

@@ -12,5 +12,6 @@ public static class ServicesExtensions
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IGoalService, GoalService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IOperationService, OperationService>();
     }    
 }

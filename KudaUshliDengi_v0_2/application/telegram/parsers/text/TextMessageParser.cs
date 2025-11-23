@@ -23,7 +23,7 @@ public class TextMessageParser : IMessageParser
     private readonly IUserService _userService;
     private readonly ICategoryLogic _categoryLogic;
     private readonly IGoalLogic _goalLogic;
-    private readonly IOperationService _operationService;
+    private readonly IOperationLogic _operationlogic;
     private readonly IFuzzySearchService _fuzzySearch;
     private readonly IStateStorage<long, UserState>  _userStateStorage;
     
@@ -33,7 +33,7 @@ public class TextMessageParser : IMessageParser
         IUserService userService, 
         ICategoryLogic categoryLogic,
         IGoalLogic goalLogic,
-        //IOperationService operationService,
+        IOperationLogic operationlogic,
         //IFuzzySearchService fuzzySearch,
         IStateStorage<long, UserState> userStateStorage)
     {
@@ -42,7 +42,7 @@ public class TextMessageParser : IMessageParser
         _userService = userService;
         _categoryLogic = categoryLogic;
         _goalLogic = goalLogic;
-        //_operationService  = operationService;
+        _operationlogic = operationlogic;
         
         _userStateStorage = userStateStorage;
         //_fuzzySearch = fuzzySearch;
@@ -192,58 +192,14 @@ public class TextMessageParser : IMessageParser
         if(isMenu) return Result.Success();
         
         command = command.ToLower(); 
-        /*
         if (command[0] == '+')
         {
             //TODO: Парсинг дохода
             string[] strs = command.Substring(1).Split(' ');
-            if(!decimal.TryParse(strs[0], out var amount))
-                return Result.Failure(Error.New("При создании дохода сумма указана не в формате числа!", 412));
-            
-            string categoryName = string.Join(" ", strs[1..]);
-            var searchCategories = await _fuzzySearch.SearchCategories(context.Message.From!.Id, categoryName, true);
-            if (searchCategories.IsFailure)
-                return Result.Failure(searchCategories.Error);
-            
-            if(searchCategories.IsNotFound || searchCategories.Value.Count <= 0) //TODO: Можно добавить поиск среди категорий расходов, чтобы дать подсказку, что категория не из доходов, а из расходов
-                await _botClient.SendMessage(context.Message.Chat.Id, MessageBuilder.NotFoundCategory(categoryName, TransactionType.Income), ParseMode.Markdown, cancellationToken: ct);
-            
-            if (searchCategories.Value.Count == 1)
+            if (decimal.TryParse(strs[0], out var amount))
             {
-                var operation = await _operationService.CreateIncomeAsync(state.Value.UserId,new Money(amount), searchCategories.Value.First().Id);
-                if(!operation.IsSuccess)
-                    return Result.Failure(operation.Error);
-
-                var mes = MessageBuilder.CreateOperation(operation.Value, searchCategories.Value.First().Name);
-                
-                await _botClient.SendMessage(context.Message.Chat.Id, 
-                    mes, 
-                    ParseMode.Markdown,
-                    cancellationToken: ct);
-            }
-            else
-            {
-                await _botClient.SendMessage(context.Message.Chat.Id,
-                    MessageBuilder.ListCategoriesForEnter(searchCategories.Value), 
-                    cancellationToken: ct);
-                List<UCIListCategoriesItem> listCategories = new();
-                for (int i = 0; i < searchCategories.Value.Count; i++)
-                    listCategories.Add(new UCIListCategoriesItem(searchCategories.Value[i].Id, i+1, searchCategories.Value[i].Name));
-                string jsonListCategories = JsonSerializer.Serialize(listCategories);
-
-                UCIOperationData operationData = new UCIOperationData(state.Value.UserId, TransactionType.Income, new Money(amount), DateOnly.FromDateTime(DateTime.UtcNow));
-                string jsonOperationData = JsonSerializer.Serialize(operationData);
-                
-                await _userStateStorage.SetAsync(
-                    context.Message!.From!.Id, 
-                    state.Value.UpdateStatus(UserStatus.WaitEnterCategoryForCreateOperation)
-                        .WithContextItems(
-                            ("list_categories", jsonListCategories), 
-                            ("operation_data", jsonOperationData)
-                        ));
-                await _botClient.SendMessage(context.Message.Chat.Id, 
-                    MessageBuilder.ListCategoriesForEnter(searchCategories.Value), 
-                    cancellationToken: ct);
+                string categoryName = string.Join(" ", strs[1..]);
+                return await _operationlogic.CreateIncome(context, amount, categoryName, ct);
             }
         }/*
         else if (command.Contains("на") || command.Contains("из"))
@@ -253,60 +209,17 @@ public class TextMessageParser : IMessageParser
         else if(command.IndexOf(':') > -1)
         {
             //TODO: Парсинг сложного расхода
-        }
+        }*/
         else
         {
             string[] strs = command.Split(' ');
-            if(!decimal.TryParse(strs[0], out var amount))
-                return Result.Failure(Error.New("При создании дохода сумма указана не в формате числа!", 412));
-            
-            string categoryName = string.Join(" ", strs[1..]);
-            var searchCategories = await _fuzzySearch.SearchCategories(context.Message.From!.Id, categoryName);
-            if (searchCategories.IsFailure)
-                return Result.Failure(searchCategories.Error);
-            
-            if(searchCategories.IsNotFound || searchCategories.Value.Count <= 0) //TODO: Можно добавить поиск среди категорий доходов, чтобы дать подсказку, что категория не из расходов, а из доходов
-                await _botClient.SendMessage(context.Message.Chat.Id, MessageBuilder.NotFoundCategory(categoryName, TransactionType.Expense), ParseMode.Markdown, cancellationToken: ct);
-            
-            if (searchCategories.Value.Count == 1)
+            strs[0] = strs[0].Replace('.', ',');
+            if (decimal.TryParse(strs[0], out var amount))
             {
-                var operation = await _operationService.CreateExpenseAsync(state.Value.UserId,new Money(amount), searchCategories.Value.First().Id, ct);
-                if(!operation.IsSuccess)
-                    return Result.Failure(operation.Error);
-
-                var mes = MessageBuilder.CreateOperation(operation.Value, searchCategories.Value.First().Name);
-                
-                await _botClient.SendMessage(context.Message.Chat.Id, 
-                    mes, 
-                    ParseMode.Markdown,
-                    cancellationToken: ct);
-            }
-            else
-            {
-                await _botClient.SendMessage(context.Message.Chat.Id,
-                    MessageBuilder.ListCategoriesForEnter(searchCategories.Value), 
-                    cancellationToken: ct);
-                List<UCIListCategoriesItem> listCategories = new();
-                for (int i = 0; i < searchCategories.Value.Count; i++)
-                    listCategories.Add(new UCIListCategoriesItem(searchCategories.Value[i].Id, i+1, searchCategories.Value[i].Name));
-                string jsonListCategories = JsonSerializer.Serialize(listCategories);
-
-                UCIOperationData operationData = new UCIOperationData(state.Value.UserId, TransactionType.Expense, new Money(amount), DateOnly.FromDateTime(DateTime.UtcNow));
-                string jsonOperationData = JsonSerializer.Serialize(operationData);
-                
-                await _userStateStorage.SetAsync(
-                    context.Message!.From!.Id, 
-                    state.Value.UpdateStatus(UserStatus.WaitEnterCategoryForCreateOperation)
-                        .WithContextItems(
-                            ("list_categories", jsonListCategories), 
-                            ("operation_data", jsonOperationData)
-                        ));
-                await _botClient.SendMessage(context.Message.Chat.Id, 
-                    MessageBuilder.ListCategoriesForEnter(searchCategories.Value), 
-                    cancellationToken: ct);
+                string categoryName = string.Join(" ", strs[1..]);
+                return await _operationlogic.CreateExpense(context, amount, categoryName, ct);
             }
         }
-        */    
         return Result.Success();
     }
     private async Task<Result> HandleCategoriesCommand(string text, Update? context, CancellationToken ct)

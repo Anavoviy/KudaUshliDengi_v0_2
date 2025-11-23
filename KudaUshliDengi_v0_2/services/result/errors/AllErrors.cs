@@ -10,4 +10,6 @@ public static class AllErrors
     public static CategoryErrors Category => new CategoryErrors(); //Коды 200-215
     
     public static GoalErrors Goal => new GoalErrors(); //Коды 700-715
+
+    public static OperationErrors Operation => new OperationErrors();
 }

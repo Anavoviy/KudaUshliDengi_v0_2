@@ -206,6 +206,17 @@ public static class MessageBuilder
         
         return mes;
     }
+    public static string ExistsManyCategories(List<Category> searchCategories)
+    {
+        var mes = "Найдено несколько категорий подходящих по названию:\n";
+
+        for (int i = 0; i < searchCategories.Count; i++)
+            mes += $"{i + 1}. {searchCategories[i].Name}\n";
+        
+        mes += "\nПопробуйте ещё раз, введя более конкретную категорию";
+        
+        return mes;
+    }
 
     public static string CategoryRenamed(string oldCategoryName, string newCategoryName)
         => $"""
